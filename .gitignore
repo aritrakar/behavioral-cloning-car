@@ -1,3 +1,7 @@
+.venv
 .venv/**
+.myvenv
 .myvenv/**
 track/**
+__pycache__
+__pycache__/**
