@@ -7,8 +7,6 @@ from io import BytesIO
 from PIL import Image
 import cv2
 
-import matplotlib.pyplot as plt
-
 import torch
 import torch.nn as nn
 from torch import load
@@ -16,11 +14,11 @@ import torch.nn.functional as nnF
 from torchvision import transforms
 from torchvision.transforms.functional import gaussian_blur
 
-from model import NvidiaModel
+from model import NvidiaModel, DAVE2Model
 
-# MAX_SPEED = 25
-# MIN_SPEED = 10
-SPEED_LIMIT = 10
+MAX_SPEED = 25
+MIN_SPEED = 10
+speed_limit = MAX_SPEED
 model = None
 
 print("Starting server...")
@@ -52,24 +50,29 @@ def preprocess_image_with_cv2(encoded_image):
 
 @sio.on("telemetry")
 def telemetry(sid, data):
-    global model
+    global model, speed_limit
 
     speed = float(data["speed"])
+    throttle = float(data["throttle"])
     image_tensor = preprocess_image_with_cv2(data["image"])
-    # print(image_tensor)
 
     # Show the image_tensor    
-    cv2.imshow("Image", image_tensor[0].permute(1, 2, 0).numpy())
-    if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit the display window
-        return
+    # cv2.imshow("Front camera", image_tensor[0].permute(1, 2, 0).numpy())
+    # if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit the display window
+    #     return
 
     steering_angle = 0.0
     if model is not None:
         steering_angle = float(model(image_tensor))
     
-    throttle = 1.0 - speed/SPEED_LIMIT
+    if speed > speed_limit:
+        speed_limit = MIN_SPEED  # slow down
+    else:
+        speed_limit = MAX_SPEED
 
-    print(f"Steering angle: {steering_angle:.5f}. Throttle: {throttle}. Speed: {speed}")
+    throttle = 1.0 - steering_angle**2 - (speed/speed_limit)**2
+
+    print(f"Steering angle: {steering_angle:.5f}. Throttle: {throttle:10.6f}. Speed: {speed:10.4f}")
     send_control(steering_angle, throttle)
 
 @sio.on("connect")
@@ -85,8 +88,8 @@ def send_control(steering_angle, throttle):
 
 if __name__ == "__main__":
     print("Loading model...")
-    model = NvidiaModel()
-    model_path = "models/model_dropout.pth"
+    model = DAVE2Model()
+    model_path = "models/model_dropout_3.pth"
     model.load_state_dict(load(model_path))
     model.eval()
     print("Loaded model.")
