@@ -22,10 +22,10 @@ git clone
 # Install the dependncies
 pip install -r requirements.txt
 
-# Start the simulator
+# Start the simulator separately
 
 # After the simulator is started, run the following
-python drive.py
+python drive_pt.py
 ```
 
 ## Technical details
