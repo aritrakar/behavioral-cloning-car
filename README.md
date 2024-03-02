@@ -45,7 +45,7 @@ The NVIDIA DAVE-2 CNN model architecture was used. Read more about it [here](htt
 
 ## Results
 
-![video](https://github.com/aritrakar/behavioral-cloning-car/blob/master/demo.mp4)
+![Demo](https://github.com/aritrakar/behavioral-cloning-car/blob/master/demo.gif)
 
 ## Acknowledgements
 
